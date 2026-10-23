@@ -1,0 +1,7 @@
+# Claude Code plugins, installed with `claude plugin install <plugin>@<marketplace>`.
+# One per line: <plugin>@<marketplace> [<github-owner/repo of the marketplace>]
+# The marketplace repo is only needed for marketplaces that are not built in.
+# Lines starting with # are ignored.
+
+mattpocock-skills@claude-plugins-official
+typesafe@typesafe-ai                       typesafe-ai/skills

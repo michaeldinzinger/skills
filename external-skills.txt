@@ -1,0 +1,7 @@
+# Third-party skills, installed with `npx skills add <repo> --skill <name> -g`.
+# One per line: <github-owner/repo> <skill-name>
+# Lines starting with # are ignored.
+
+addyosmani/agent-skills   interview-me
+addyosmani/agent-skills   code-review-and-quality
+vercel-labs/skills        find-skills
