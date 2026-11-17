@@ -42,7 +42,10 @@ This step is complete when you can name the next three units of work. For each u
   - user actions: verb and object. Add a `-yyyymmdd` date for a one-time event, for example `A6-abstract-submission`, `A11-openrouter-credit-topup-20261017`;
   - experiments: the item that you measure, for example `E4-crawl-replay-ta-br`, `E3-link-scorer-mmbert-vs-fasttext`.
 
-Write the full ID in all locations: cards, file names of the record, branches, commit messages, briefs and paper notes. In a brief, write the full ID at the first mention. After that, the code alone is sufficient. The user can answer with the code, the name or the two together ("D23 A", "consent A"). If a project has codes alone or names alone, add the half that is not there when you next change the item. Use full IDs for all new items.
+Write the full ID in cards, file names of the record, branches, commit messages and paper notes. The user can answer with the code, the name or the two together ("D23 A", "consent A"). If a project has codes alone or names alone, add the half that is not there when you next change the item. Use full IDs for all new items.
+- **Name artifacts by what they do, not by the experiment that made them.** Scripts, modules, result files and folders get plain names, for example `replay.py` or `results/significance_tests.md`. The experiment code goes only into the record, branch names and commit messages. The record links each experiment to its files.
+- In a brief, call an experiment by its name, for example "the plain-names job". Put the code in parentheses at the first mention only. Decisions and actions keep their codes, because the user answers with them.
+- Name an experiment after its output, so the name stays correct when it ends: `E87-plain-release-names`, not `E87-fix`.
 
 ## 1b. Write in STE
 
@@ -72,6 +75,7 @@ Give each independent unit of work to a subagent. Do the integration, the verifi
   - the definition of "done";
   - the **return contract**: branch and sha, exact commands, numbers with their sources, and open doubts.
 - Give agents that write code `isolation: "worktree"` and their own branch. Agents that only read (research, drafts) work in the main checkout.
+- In a worktree, run each git command alone, from the worktree root. Put steps that depend on each other into a script file.
 - **Use the lightest model that can do the work** (`model` on the Agent call). Not each agent needs the model of the lead.
   - Haiku: mechanical work, for example look-ups, extraction from logs or transcripts, file and git tasks, format changes, or a known command and its report.
   - Sonnet: routine code with a clear specification, tests, reviews, reruns, focused research and drafts.
@@ -79,6 +83,10 @@ Give each independent unit of work to a subagent. Do the integration, the verifi
   - If you are not sure, start with a lighter model. If the result fails verification, use a stronger model.
 - Run agents in the background. If their files do not overlap, run them in parallel. Give work with overlapping files to one agent.
 - When an agent returns, **verify** its work before you report it. Run the tests, read the diff, and compare one number with its source. A subagent report is only a claim until you verify it.
+- **Merge.** Other sessions can push or commit to `main` at the same time. Before you push to `main`:
+  1. Run `git fetch`. Then compare with `git log origin/main..main` and `git log main..origin/main`.
+  2. Merge each commit that is only on local `main` into your branch. Push with `git push origin HEAD:main`.
+  3. Before you discard a worktree, make sure that `git log origin/main` contains your commits.
 - An agent can send a second notification after its hand-back. An old agent can also send one. If you already processed that work, write one line and continue.
 
 ## 3. Brief the user
@@ -100,7 +108,7 @@ A brief has a maximum of four blocks, in this sequence. Do not include an empty 
 - [ ] <A<n>-action-name>: `<command>` — unblocks <what>
 ```
 
-**FYI**: work that is complete and verified. Use one line for each item, with the path, branch or link. The user does not have to answer.
+**FYI**: work that is complete and verified. Use one line for each item, with the path, branch or link. The user does not have to answer. If the user must act on a detail, put it under Actions.
 
 **Next**: never empty (§3a). Tell what runs now or starts now. Give 1–3 concrete proposals for the next work. For each proposal, tell what it would show and its first step.
 
@@ -147,7 +155,20 @@ Some project phases have a clear next step. In other phases, the direction is no
 
 **Status and memory**
 - After each decision or result, update the status page (`rp-status` skill) and the source-of-truth document of the project. Change the text where it is. Do not only add new text at the end.
-- Write the preferences of the user about how to work with them in memory.
+
+## 4a. Public release
+
+The project directory is the **internal repository**, usually on GitLab. It keeps the full history: experiment codes, pilots, notes and per-machine files. The **public release** is a separate repository that the project builds from the folder `release/`. It is published one time. It does not show the project history. It shows only the final experiments, each as one command with a plain, descriptive name.
+
+- **Build it at one milestone, not in parallel.** The release starts at one point before publication, like the start of the paper writing. The user decides this point. Before that point, do not keep a second, public copy of the code.
+- **Keep the internal repository release-friendly.** Then the build at the milestone is cheap:
+  - plain names for scripts and results (§1a);
+  - one result file per experiment, not one per machine;
+  - no personal paths, e-mail addresses or machine names in code and results.
+- **Build it from a manifest.** `release/` holds the release documents (README, licence, data notes) and a manifest of the files to copy. A build script copies the files into a new repository with one commit and no history. It renames and scrubs the copy. Then a leak check stops the build on experiment codes, machine names, private paths, e-mail addresses and secrets.
+- **One command per experiment.** The release has one entry point, for example `python reproduce.py <name>`. `--list` shows each experiment, the paper item that it gives, its run time and what it needs. The README starts with the question, the main result and a table of experiment, command and output. It links the data set.
+- **Check the commit, not the folder.** Before you give the user a push command, examine a fresh clone of the commit. Compare its file list with the manifest. Run the tests and the experiment commands in the clone. Show the commit author, message, branch and file count to the user.
+- The user pushes. After a fix, rebuild and give the push command again.
 
 ## 5. Lead record: always ready for a handoff
 
@@ -167,6 +188,7 @@ docs/decisions/<ID>.md   # e.g. D23-consent-after-go-fail.md: the full card as i
 - The status page holds the results and next steps. The index holds decisions, actions and work in flight. Do not copy text between them. Use links.
 - `CLAUDE.md` names `docs/decisions.md`, so each new session finds it. A takeover reads `CLAUDE.md`, the status page and the index. It reads more only if the work needs it. `HANDOFF.md` (`session-handoff`) is then only for context that has no other location.
 - Commit the record together with the work that it describes.
+- When an item in "In flight" is merged and recorded, move its result to the status page in the same session. Then remove the item from "In flight".
 - **Where things live.** Update this section when you add a machine, a data set outside git, or an environment that a job uses. A session on a different machine must find all these items from this section alone.
 - **Backups.** Branches that are not pushed, and data on one machine, are a single point of failure. At each merge, if the branch is not on a remote, put a push under Actions. Do not push without the approval of the user.
 
