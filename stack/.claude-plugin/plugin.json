@@ -1,0 +1,6 @@
+{
+  "name": "stack",
+  "description": "Meta-plugin: installs my whole skill stack. It has no skills of its own; everything comes in through dependencies.",
+  "author": { "name": "Michael Dinzinger" },
+  "dependencies": ["skill-stack", "agent-skills", "find-skills", "mattpocock-skills", "typesafe"]
+}

@@ -8,40 +8,51 @@ My personal skill stack for [Claude Code](https://claude.com/claude-code): the g
 curl -fsSL https://raw.githubusercontent.com/michaeldinzinger/skills/main/install.sh | bash
 ```
 
-That's it. Restart Claude Code afterwards. Run the same command again any time to update.
+Restart Claude Code afterwards (or run `/reload-plugins`). Run the same command again any time to update. The only requirement is Claude Code itself. The script finds it in `~/.local/bin` even when that is not on your `PATH` yet.
 
-What it does:
+This repo is a Claude Code [plugin marketplace](.claude-plugin/marketplace.json) called `michaeldinzinger`. The script:
 
-1. Clones this repo to `~/.local/share/skill-stack` (or pulls it if it is already there).
-2. Symlinks every folder in [`skills/`](skills) into `~/.claude/skills/`. If a real folder with the same name is already there, it is moved to `~/.claude/skills/.backup-<timestamp>/` first.
-3. Installs the third-party skills listed in [`external-skills.txt`](external-skills.txt) with the [`skills` CLI](https://skills.sh) (needs Node.js / `npx`).
-4. Installs the Claude Code plugins listed in [`plugins.txt`](plugins.txt) (needs `claude` on the `PATH`).
+1. Adds the marketplace (or updates it, if it is already there).
+2. Installs the `stack` plugin. It has no skills of its own. Its [dependencies](stack/.claude-plugin/plugin.json) pull in everything else: my own skills (`skill-stack`) and the third-party plugins below.
+3. Updates every installed plugin from the marketplace, so they move to the commits pinned in `marketplace.json`.
+4. Cleans up what the old symlink/`npx` installer left behind. It removes old symlinks, moves old `npx skills` copies to `~/.local/share/skill-stack-backups/`, and uninstalls the unpinned `mattpocock-skills@claude-plugins-official` and `typesafe@typesafe-ai`.
 
-Steps 3 and 4 are skipped with a warning if the tool is missing, and any single skill or plugin that fails to install is skipped without stopping the rest.
+If a step fails, the script prints the error from `claude`, goes on where that makes sense, and exits non-zero.
+
+Without the script, the same thing is:
+
+```bash
+claude plugin marketplace add michaeldinzinger/skills
+claude plugin install stack@michaeldinzinger
+```
 
 ### Options
 
 ```bash
-# only my own skills, no third-party skills or plugins
-curl -fsSL https://raw.githubusercontent.com/michaeldinzinger/skills/main/install.sh | bash -s -- --no-external --no-plugins
+# pass options after `bash -s --` when piping
+curl -fsSL https://raw.githubusercontent.com/michaeldinzinger/skills/main/install.sh | bash -s -- --dry-run
 ```
 
-| Option / variable | Default | Effect |
-| --- | --- | --- |
-| `--no-external` | | skip `external-skills.txt` |
-| `--no-plugins` | | skip `plugins.txt` |
-| `SKILLS_HOME` | `~/.local/share/skill-stack` | where the repo is cloned |
-| `SKILLS_TARGET` | `~/.claude/skills` | where skills are linked |
-| `SKILLS_REPO` | `https://github.com/michaeldinzinger/skills.git` | repo to clone (e.g. the SSH URL) |
+| Option / variable | Effect |
+| --- | --- |
+| `--only-mine` | install only `skill-stack` (my own skills), no third-party plugins |
+| `--dry-run` | print what would change, change nothing |
+| `--uninstall` | uninstall all plugins from this marketplace, prune them, remove the marketplace |
+| `SKILLS_MARKETPLACE` | marketplace source (default: the checkout when run from one, else `michaeldinzinger/skills`) |
+| `CLAUDE_BIN` | path to `claude`, if the script cannot find it |
+
+Skills from plugins are namespaced by plugin, e.g. `skill-stack:rp-lead`. They still trigger on their descriptions as before.
 
 ### Working from a checkout
 
-If you already have the repo cloned (e.g. to edit skills), run the script from there instead. It then links to that checkout and does not clone a second copy:
+Run the script from a clone to edit skills:
 
 ```bash
 git clone git@github.com:michaeldinzinger/skills.git ~/GitHub/skills
 ~/GitHub/skills/install.sh
 ```
+
+The marketplace then points at the checkout, and Claude Code loads `skill-stack` from it in place. Edits take effect at the next session start or after `/reload-plugins`, with no push or reinstall needed. Run the curl command again to switch back to GitHub.
 
 ## My skills
 
@@ -54,26 +65,29 @@ git clone git@github.com:michaeldinzinger/skills.git ~/GitHub/skills
 | [`session-handoff`](skills/session-handoff/SKILL.md) | Write a throwaway `HANDOFF.md` for the next session, or consume and delete one. |
 | [`pr-description`](skills/pr-description/SKILL.md) | Generate a concise PR description from a PR, branch or diff as copyable markdown. |
 
-## Third-party skills and plugins
+## Third-party plugins
 
-From [`external-skills.txt`](external-skills.txt):
+Listed in [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json), each pinned to a commit (`sha`):
 
-| Skill | Source |
-| --- | --- |
-| `interview-me`, `code-review-and-quality` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) |
-| `find-skills` | [vercel-labs/skills](https://github.com/vercel-labs/skills) |
+| Plugin | Skills | Source |
+| --- | --- | --- |
+| `agent-skills` | `interview-me`, `code-review-and-quality` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) |
+| `find-skills` | `find-skills` | [vercel-labs/skills](https://github.com/vercel-labs/skills) |
+| `mattpocock-skills` | all of the plugin | [mattpocock/skills](https://github.com/mattpocock/skills) |
+| `typesafe` | all of the plugin | [typesafe-ai/skills](https://github.com/typesafe-ai/skills) |
 
-From [`plugins.txt`](plugins.txt):
+Pinning means a push to one of those repos changes nothing here until I move the pin. To update one:
 
-| Plugin | Marketplace |
-| --- | --- |
-| `mattpocock-skills` | `claude-plugins-official` |
-| `typesafe` | [typesafe-ai/skills](https://github.com/typesafe-ai/skills) |
+1. Look at what changed: `git log -p <old-sha>..<new-sha>` in that repo.
+2. Put the new `sha` in `marketplace.json`, commit, push, and re-run the installer.
 
-## Adding or changing a skill
+`mattpocock-skills` and `typesafe` take their version from their own `plugin.json`. Claude Code only updates them when that version changes. If you move the pin and the installer does not pick it up, upstream did not bump the version: run `claude plugin uninstall <plugin>@michaeldinzinger` and re-run the installer. `agent-skills` and `find-skills` are versioned by commit, so any pin move updates them.
 
-- **Own skill:** create `skills/<name>/SKILL.md` (with `name` and `description` frontmatter), commit, push, and re-run the install command on each machine. Edits to existing skills only need a `git pull`, since the installed skills are symlinks into the repo.
-- **Third-party skill:** add a line `<owner/repo> <skill-name>` to `external-skills.txt`.
-- **Plugin:** add a line `<plugin>@<marketplace> [<marketplace-repo>]` to `plugins.txt`.
+## Adding or changing things
 
-To remove one of my skills, delete its folder and re-run the installer. It cleans up links to skills that no longer exist.
+- **Own skill:** create `skills/<name>/SKILL.md` (with `name` and `description` frontmatter), commit, push, re-run the installer. The `skill-stack` plugin picks up every folder in `skills/`.
+- **Skills from another repo:** add a `git-subdir` entry to `marketplace.json` with `path` set to the folder that holds the skills, `skills` listing the ones you want, and a `sha`. Then add its name to `dependencies` in [`stack/.claude-plugin/plugin.json`](stack/.claude-plugin/plugin.json). Do not point a `strict: false` entry at a repo that has its own `plugin.json`: it fails to load with "conflicting manifests".
+- **A whole plugin:** add an entry with a `url` source and a `sha`, and add it to `dependencies`.
+- **Check before pushing:** `claude plugin validate .`
+
+To remove something, take it out of `marketplace.json` and `dependencies`, then run `claude plugin uninstall <name>@michaeldinzinger`.

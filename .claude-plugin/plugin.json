@@ -1,0 +1,10 @@
+{
+  "name": "skill-stack",
+  "description": "Michael Dinzinger's own skills: research-project lead, interview, status, pre-paper review, session handoff, PR descriptions.",
+  "author": {
+    "name": "Michael Dinzinger"
+  },
+  "homepage": "https://github.com/michaeldinzinger/skills",
+  "repository": "https://github.com/michaeldinzinger/skills",
+  "skills": "./skills"
+}

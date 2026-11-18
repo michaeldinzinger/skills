@@ -1,0 +1,82 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "michaeldinzinger",
+  "description": "My personal skill stack: my own skills plus the third-party skills and plugins I use, each pinned to a reviewed commit.",
+  "owner": {
+    "name": "Michael Dinzinger",
+    "url": "https://github.com/michaeldinzinger"
+  },
+  "plugins": [
+    {
+      "name": "stack",
+      "description": "Everything: installs skill-stack and every third-party plugin below as dependencies.",
+      "source": "./stack"
+    },
+    {
+      "name": "skill-stack",
+      "description": "My own skills (this repo).",
+      "source": "./"
+    },
+    {
+      "name": "agent-skills",
+      "description": "interview-me and code-review-and-quality from Addy Osmani's agent-skills.",
+      "author": {
+        "name": "Addy Osmani"
+      },
+      "homepage": "https://github.com/addyosmani/agent-skills",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/addyosmani/agent-skills.git",
+        "path": "skills",
+        "sha": "39b723ceebf81474d0557c1fecd01eddab585563"
+      },
+      "skills": [
+        "./interview-me",
+        "./code-review-and-quality"
+      ]
+    },
+    {
+      "name": "find-skills",
+      "description": "find-skills from Vercel's skills CLI repo.",
+      "author": {
+        "name": "Vercel"
+      },
+      "homepage": "https://github.com/vercel-labs/skills",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/vercel-labs/skills.git",
+        "path": "skills",
+        "sha": "57217cf86ba38148a57af9e90d14a4c049558330"
+      },
+      "skills": [
+        "./find-skills"
+      ]
+    },
+    {
+      "name": "mattpocock-skills",
+      "description": "Matt Pocock's engineering skills.",
+      "author": {
+        "name": "Matt Pocock"
+      },
+      "homepage": "https://github.com/mattpocock/skills",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/mattpocock/skills.git",
+        "sha": "49dd158d1076134a641b33efb035946536778336"
+      }
+    },
+    {
+      "name": "typesafe",
+      "description": "TypeSafe System One API skills.",
+      "author": {
+        "name": "TypeSafe AI"
+      },
+      "homepage": "https://typesafe.ai",
+      "source": {
+        "source": "url",
+        "url": "https://github.com/typesafe-ai/skills.git",
+        "sha": "65a39f393687675ce170e6094757de20370365b9"
+      }
+    }
+  ]
+}
